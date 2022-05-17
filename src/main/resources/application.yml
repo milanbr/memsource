@@ -1,0 +1,92 @@
+server:
+  port: 8001
+  error:
+    include-message: always
+
+spring:
+  application:
+    name: memsource-service
+
+  jpa:
+    show-sql: false
+    database-platform: org.hibernate.dialect.PostgreSQL10Dialect
+    hibernate:
+      ddl-auto: none
+    properties:
+      hibernate:
+        connection:
+          useUnicode: true
+          CharSet: utf8mb4
+          characterEncoding: utf8mb4
+          collationServer: utf8mb4_unicode_ci
+        jdbc:
+          batch_size: 50
+
+  datasource:
+    driverClassName: org.postgresql.Driver
+    initialization-mode: always
+    url: "jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5434}/${DB_DB:memsource}?reWriteBatchedInserts=true"
+    password: ${DB_PASSWORD:memsource}
+    username: ${DB_USERNAME:memsource}
+
+  flyway:
+    url: "jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5434}/${DB_DB:memsource}"
+    user: ${DB_USERNAME:memsource}
+    password: ${DB_PASSWORD:memsource}
+    locations: ${FLYWAY_LOCATIONS}
+    clean-on-validation-error: false
+
+  cache:
+    type: caffeine
+    caffeine:
+      spec: maximumSize=1000,expireAfterWrite=10m
+
+logging:
+  pattern:
+    console: "%d{DEFAULT} %-5level [%t] [%X{traceId},%X{spanId},%X{username},%X{businessKey}] %.50logger{2.}: %m%n"
+  level:
+    com.alpiq: DEBUG
+    org.springframework: INFO
+    jdbc: ERROR
+    jdbc.sqlonly: WARN
+    org.zalando.logbook: INFO
+
+log4jdbc:
+  dump:
+    sql:
+      addsemicolon: true
+      maxlinelength: 0
+  trim:
+    sql:
+      extrablanklines: false
+
+logbook:
+  exclude:
+    - /actuator/**
+
+feign:
+  client:
+    config:
+      default:
+        connectTimeout: 1000
+        readTimeout: 10000
+        loggerLevel: none
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,caches,metrics,configprops,loggers,dev-info
+      cors:
+        allowed-origins: "*"
+        allowed-methods: GET
+        allowed-headers: "*"
+  # actuator full git info
+  info:
+    git:
+      mode: full
+
+springdoc:
+  writer-with-default-pretty-printer: true
+  swagger-ui:
+    path: /swagger/swagger-ui.html

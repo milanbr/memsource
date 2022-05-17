@@ -1,0 +1,125 @@
+plugins {
+    id 'java'
+    id 'idea'
+    id 'jacoco'
+    id 'org.springframework.boot' version '2.6.6'
+    id 'io.spring.dependency-management' version '1.0.11.RELEASE'
+}
+
+ext {
+    set('springCloudVersion', "2021.0.2")
+    set('mapstructVersion', "1.4.2.Final")
+    set('lombokMapstructBindingVersion', "0.2.0")
+    set('logbookVersion', "2.14.0")
+    set('logbackEncoderVersion', "7.1.1")
+    set('postgreVersion', "42.3.5")
+    set('springdocVersion', "1.6.8")
+    set('flywayCoreVersion', "8.5.10")
+    set('embeddedPostgres', "1.3.1")
+}
+
+group = 'cz.brich.memsource'
+version = '1.0.'
+description = 'Memsource Service'
+
+sourceCompatibility = '17'
+targetCompatibility = '17'
+
+repositories {
+    mavenLocal()
+    mavenCentral()
+}
+
+springBoot {
+    buildInfo()
+}
+
+dependencies {
+    implementation 'org.springframework.boot:spring-boot-starter-actuator',
+            'org.springframework.boot:spring-boot-starter-web',
+            'org.springframework.boot:spring-boot-starter-data-jpa',
+            'org.springframework.boot:spring-boot-starter-cache',
+            'com.github.ben-manes.caffeine:caffeine',
+            'org.springframework.cloud:spring-cloud-starter-sleuth',
+
+            "org.flywaydb:flyway-core:${flywayCoreVersion}",
+
+            'org.springframework.cloud:spring-cloud-starter-openfeign',
+            'io.github.openfeign:feign-httpclient',
+
+            "org.zalando:logbook-spring-boot-starter:${logbookVersion}",
+
+            "net.logstash.logback:logstash-logback-encoder:${logbackEncoderVersion}",
+
+            "org.mapstruct:mapstruct:${mapstructVersion}",
+            "org.projectlombok:lombok",
+            "org.springdoc:springdoc-openapi-ui:${springdocVersion}"
+
+    runtimeOnly "org.postgresql:postgresql:${postgreVersion}"
+
+    testImplementation('org.springframework.boot:spring-boot-starter-test') {
+        exclude group: 'junit', module: 'junit'
+        exclude group: 'org.junit.vintage', module: 'junit-vintage-engine'
+    }
+    testImplementation 'org.springframework.security:spring-security-test',
+            "io.zonky.test:embedded-postgres:${embeddedPostgres}"
+
+    annotationProcessor "org.projectlombok:lombok",
+            "org.mapstruct:mapstruct-processor:${mapstructVersion}",
+            "org.projectlombok:lombok-mapstruct-binding:${lombokMapstructBindingVersion}"
+    testAnnotationProcessor "org.projectlombok:lombok",
+            "org.mapstruct:mapstruct-processor:${mapstructVersion}",
+            "org.projectlombok:lombok-mapstruct-binding:${lombokMapstructBindingVersion}"
+}
+
+dependencyManagement {
+    imports {
+        mavenBom "org.springframework.cloud:spring-cloud-dependencies:${springCloudVersion}"
+    }
+    dependencies {
+        dependency "org.mapstruct:mapstruct-processor:${mapstructVersion}"
+    }
+}
+
+// final name of jar without version
+bootJar {
+    archiveFileName = 'memsource-service.jar'
+}
+
+test {
+    useJUnitPlatform()
+}
+
+compileJava {
+    options.compilerArgs << '-parameters'
+}
+
+// so that gradle:clean task removes the out folder
+clean {
+    delete 'out'
+    delete 'src/main/generated'
+}
+
+jacoco {
+    toolVersion = "0.8.8"
+}
+
+jacocoTestReport {
+    dependsOn test // tests are required to run before generating the report
+
+    afterEvaluate {
+        classDirectories.setFrom(files(classDirectories.files.collect {
+            fileTree(dir: it, exclude: [
+                    "cz/brich/memsource/config",
+                    "cz/brich/memsource/client"
+            ])
+        }))
+    }
+
+    reports {
+        xml.enabled true
+    }
+}
+
+test.finalizedBy jacocoTestReport
+check.dependsOn jacocoTestCoverageVerification

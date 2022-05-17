@@ -1,0 +1,26 @@
+spring:
+  flyway:
+    clean-on-validation-error: true
+    locations: ${FLYWAY_LOCATIONS:classpath:db/migration,db/environments/dev}
+
+logging:
+  level:
+    com.alpiq: INFO
+    org.springframework: WARN
+    jdbc: WARN
+    org.flywaydb.core.internal.scanner.classpath: DEBUG
+
+logbook:
+  exclude:
+    - /actuator/**
+
+app:
+  services:
+    memsource:
+      url: "https://cloud.memsource.com/web"
+
+feign:
+  client:
+    config:
+      default:
+        readTimeout: 60000

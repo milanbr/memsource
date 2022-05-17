@@ -1,0 +1,21 @@
+version: "3.7"
+
+services:
+  db:
+    image: postgres:12.3
+    container_name: memsource_db
+    restart: always
+    environment:
+      POSTGRES_DB: postgres
+      POSTGRES_USER: memsource
+      POSTGRES_PASSWORD: memsource
+      PGDATA: /data/postgres
+    volumes:
+      - db-data:/data/postgres
+      - ./init_memsource.sql:/docker-entrypoint-initdb.d/init-memsource.sql
+    ports:
+      - "5434:5432"
+
+volumes:
+  db-data:
+

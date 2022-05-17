@@ -1,0 +1,31 @@
+spring:
+  flyway:
+    clean-on-validation-error: true
+    locations: ${FLYWAY_LOCATIONS:classpath:db/migration,db/environments/dev}
+  jpa:
+    properties:
+      hibernate:
+        generate_statistics: false
+
+logging:
+  level:
+    jdbc.sqlonly: INFO
+    org.zalando.logbook: TRACE
+
+#logbook:
+#  format:
+#    style: curl
+#  obfuscate:
+#    headers:
+#      -
+
+feign:
+  client:
+    config:
+      default:
+        readTimeout: 300000
+
+app:
+  services:
+    memsource:
+      url: "https://cloud.memsource.com/web"
